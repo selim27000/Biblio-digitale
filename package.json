@@ -4,7 +4,7 @@
   "description": "Projet de librairie en ligne sur 2 semaines.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon npm start"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/selim27000/Biblio-digitale/issues"
   },
-  "homepage": "https://github.com/selim27000/Biblio-digitale#readme"
+  "homepage": "https://github.com/selim27000/Biblio-digitale#readme",
+  "dependencies": {
+    "nodemon": "^2.0.19"
+  }
 }
