@@ -1,0 +1,19 @@
+{
+  "name": "biblio-digitale",
+  "version": "1.0.0",
+  "description": "Projet de librairie en ligne sur 2 semaines.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/selim27000/Biblio-digitale.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/selim27000/Biblio-digitale/issues"
+  },
+  "homepage": "https://github.com/selim27000/Biblio-digitale#readme"
+}
