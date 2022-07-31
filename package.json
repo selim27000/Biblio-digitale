@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/selim27000/Biblio-digitale/issues"
   },
-  "homepage": "https://github.com/selim27000/Biblio-digitale#readme"
+  "homepage": "https://github.com/selim27000/Biblio-digitale#readme",
+  "dependencies": {
+    "apollo-server": "^3.10.0",
+    "graphql": "^16.5.0",
+    "mongoose": "^6.5.0",
+    "nodemon": "^2.0.19"
+  }
 }
