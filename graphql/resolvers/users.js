@@ -9,7 +9,7 @@ const User = require('../../models/User');
 function generateToken(user){
     return jwt.sign({
 
-        id:user.id,
+        id:user._id,
         email:user.email,
         username:user.username
 
@@ -37,10 +37,12 @@ module.exports = {
 
             const match= await bcrypt.compare(password, user.password);
             if(!match){
-                errors.general= 'Mauavais credentials'
+                errors.general= 'Mauvais credentials'
                 throw new UserInputError('Mauavais credentials', {errors});
             }
+            
             const token = generateToken(user)
+            console.log(token + " token user")
             return {
                 ...user._doc,
                 id: user._id,
@@ -88,11 +90,11 @@ module.exports = {
             const res = await newUser.save();
 
             const token = generateToken(res); 
-
             return {
                 ...res._doc,
                 id: res._id,
                 token
+                
             };
         }
     }

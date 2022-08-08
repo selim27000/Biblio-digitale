@@ -9,4 +9,4 @@ module.exports = {
         ...usersResolvers.Mutation,
         ...postsResolvers.Mutation
     }
-}
+};
