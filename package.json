@@ -4,6 +4,7 @@
   "description": "Projet de librairie en ligne sur 2 semaines.",
   "main": "server.js",
   "scripts": {
+    "serve":"node server.js",
     "start": "nodemon npm server.js"
   },
   "repository": {
