@@ -1,39 +1,86 @@
-
+import { useAuth } from '../lib/auth.js'
 import styles from '../styles/Home.module.css'
-import { gql } from "@apollo/client";
-import client from "../apollo-client";
+import React, { useEffect, useState } from "react";
+import { useQuery} from '@apollo/client'
 
-export default function Home({ getPosts }) {
+
+
+import {
+  ApolloProvider,
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  gql,
+} from '@apollo/client'
+
+const SignIn = () => {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  
+  const { signIn, signOut } = useAuth()
+
+  function onSubmit(e) {
+    e.preventDefault()
+    signIn({ username, password })
+  }
+
   return (
-    <div className={styles.grid}>
-  {getPosts.map((getPost) => (
-    <div key={getPost.username} className={styles.card}>
-      <h3><a href="#country-name" aria-hidden="true" class="aal_anchor" id="country-name"><svg aria-hidden="true" class="aal_svg" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>{getPost.username}</h3>
-      <p>
-        {getPost.username} - {getPost.body}
-      </p>
+    <div>
+      <form onSubmit={onSubmit}>
+        <input
+          type="text"
+          placeholder="username"
+          onChange={(e) => setUsername(e.target.value)}
+        ></input>
+        <input
+          type="password"
+          placeholder="password"
+          onChange={(e) => setPassword(e.target.value)}
+        ></input>
+        <button type="submit">Sign In</button>
+      </form>
     </div>
-  ))}
-</div>
   )
 }
-
-export async function getStaticProps() {
-  const { data } = await client.query({
-    query: gql`
-      query GetPosts {
-        getPosts{
+const GetPosts = gql`
+  {
+    getPosts{
     body
     createdAt
     username
+  
+    }
   }
-      }
-    `,
-  });
+`
 
-  return {
-    props: {
-      getPosts: data.getPosts.slice(0, 4),
-    },
- };
+const EpisodeFeed = () => {
+  
+  const { data } = useQuery(GetPosts)
+  console.log(useQuery(GetPosts))
+  const { signOut } = useAuth()
+  return (
+    <div>
+      <h1>Liste des films et séries</h1>
+      <ul>
+        {data?.getPosts.map((v) => {
+        
+          return <li key={v.id}>{v.username} -- {v.body}</li>
+        })}
+      </ul>
+      <button onClick={() => signOut()}>Sign Out</button>
+    </div>
+  )
+}
+export default function Home() {
+  const { isSignedIn } = useAuth()
+  return (
+    <div className={styles.container}>
+
+      <main className={styles.main}>
+        <h1>BIBLIO DIGITALE</h1>
+        {!isSignedIn() && <SignIn />}
+        {isSignedIn() && <EpisodeFeed />}
+      </main>
+    </div>
+  )
 }
