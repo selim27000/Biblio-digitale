@@ -1,86 +1,89 @@
-import { useAuth } from '../lib/auth.js'
-import styles from '../styles/Home.module.css'
-import React, { useEffect, useState } from "react";
-import { useQuery} from '@apollo/client'
+import React, { useContext, useState } from 'react';
+import { Button, Form } from 'semantic-ui-react';
+import { useMutation } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
 
+import { AuthContext } from '../lib/auth';
+import { useForm } from '../util/hooks';
 
+function Login(props) {
+  const context = useContext(AuthContext);
+  const [errors, setErrors] = useState({});
 
-import {
-  ApolloProvider,
-  ApolloClient,
-  InMemoryCache,
-  HttpLink,
-  gql,
-} from '@apollo/client'
+  const { onChange, onSubmit, values } = useForm(loginUserCallback, {
+    username: '',
+    password: ''
+  });
 
-const SignIn = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  
-  const { signIn, signOut } = useAuth()
+  const [loginUser, { loading }] = useMutation(LOGIN_USER, {
+    update(
+      _,
+      {
+        data: { login: userData }
+      }
+    ) {
+      context.login(userData);
+      props.history.push('/');
+    },
+    onError(err) {
+      setErrors(err.graphQLErrors[0].extensions.exception.errors);
+    },
+    variables: values
+  });
 
-  function onSubmit(e) {
-    e.preventDefault()
-    signIn({ username, password })
+  function loginUserCallback() {
+    loginUser();
   }
 
   return (
-    <div>
-      <form onSubmit={onSubmit}>
-        <input
+    <div className="form-container">
+      <Form onSubmit={onSubmit} noValidate className={loading ? 'loading' : ''}>
+        <h1>Login</h1>
+        <Form.Input
+          label="Username"
+          placeholder="Username.."
+          name="username"
           type="text"
-          placeholder="username"
-          onChange={(e) => setUsername(e.target.value)}
-        ></input>
-        <input
+          value={values.username}
+          error={errors.username ? true : false}
+          onChange={onChange}
+        />
+        <Form.Input
+          label="Password"
+          placeholder="Password.."
+          name="password"
           type="password"
-          placeholder="password"
-          onChange={(e) => setPassword(e.target.value)}
-        ></input>
-        <button type="submit">Sign In</button>
-      </form>
+          value={values.password}
+          error={errors.password ? true : false}
+          onChange={onChange}
+        />
+        <Button type="submit" primary>
+          Login
+        </Button>
+      </Form>
+      {Object.keys(errors).length > 0 && (
+        <div className="ui error message">
+          <ul className="list">
+            {Object.values(errors).map((value) => (
+              <li key={value}>{value}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
-  )
+  );
 }
-const GetPosts = gql`
-  {
-    getPosts{
-    body
-    createdAt
-    username
-  
+
+const LOGIN_USER = gql`
+  mutation login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
+      id
+      email
+      username
+      createdAt
+      token
     }
   }
-`
+`;
 
-const EpisodeFeed = () => {
-  
-  const { data } = useQuery(GetPosts)
-  console.log(useQuery(GetPosts))
-  const { signOut } = useAuth()
-  return (
-    <div>
-      <h1>Liste des films et séries</h1>
-      <ul>
-        {data?.getPosts.map((v) => {
-        
-          return <li key={v.id}>{v.username} -- {v.body}</li>
-        })}
-      </ul>
-      <button onClick={() => signOut()}>Sign Out</button>
-    </div>
-  )
-}
-export default function Home() {
-  const { isSignedIn } = useAuth()
-  return (
-    <div className={styles.container}>
-
-      <main className={styles.main}>
-        <h1>BIBLIO DIGITALE</h1>
-        {!isSignedIn() && <SignIn />}
-        {isSignedIn() && <EpisodeFeed />}
-      </main>
-    </div>
-  )
-}
+export default Login;

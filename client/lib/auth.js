@@ -1,94 +1,65 @@
-import React, { useState, useContext, createContext } from 'react'
-import {
-  ApolloProvider,
-  ApolloClient,
-  InMemoryCache,
-  HttpLink,
-  gql
-} from '@apollo/client'
+import React, { useReducer, createContext } from 'react';
+import jwtDecode from 'jwt-decode';
 
+const initialState = {
+  user: null
+};
 
+if (localStorage.getItem('jwtToken')) {
+  const decodedToken = jwtDecode(localStorage.getItem('jwtToken'));
 
-const authContext = createContext()
+  if (decodedToken.exp * 1000 < Date.now()) {
+    localStorage.removeItem('jwtToken');
+  } else {
+    initialState.user = decodedToken;
+  }
+}
 
-export function AuthProvider({ children }) {
-  const auth = useProvideAuth()
+const AuthContext = createContext({
+  user: null,
+  login: (userData) => {},
+  logout: () => {}
+});
+
+function authReducer(state, action) {
+  switch (action.type) {
+    case 'LOGIN':
+      return {
+        ...state,
+        user: action.payload
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null
+      };
+    default:
+      return state;
+  }
+}
+
+function AuthProvider(props) {
+  const [state, dispatch] = useReducer(authReducer, initialState);
+
+  function login(userData) {
+    localStorage.setItem('jwtToken', userData.token);
+    dispatch({
+      type: 'LOGIN',
+      payload: userData
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('jwtToken');
+    dispatch({ type: 'LOGOUT' });
+  }
 
   return (
-    <authContext.Provider value={auth}>
-      <ApolloProvider client={auth.createApolloClient()}>
-        {children}
-      </ApolloProvider>
-    </authContext.Provider>
-  )
+    <AuthContext.Provider
+      value={{ user: state.user, login, logout }}
+      {...props}
+    />
+  );
 }
 
-export const useAuth = () => {
-  return useContext(authContext)
-}
-
-function useProvideAuth() {
-  const [authToken, setAuthToken] = useState(null)
-
-  const isSignedIn = () => {
-    if (authToken) {
-      return true
-    } else {
-      return false
-    }
-  }
-
-  const getAuthHeaders = () => {
-    if (!authToken) return null
-
-    return {
-      authorization: `Bearer ${authToken}`,
-    }
-  }
-
-  const createApolloClient = () => {
-    const link = new HttpLink({
-      uri: 'http://localhost:5001',
-      headers: getAuthHeaders(),
-    })
-
-    return new ApolloClient({
-      link,
-      cache: new InMemoryCache(),
-    })
-  }
-
-  const signIn = async ({ username, password }) => {
-    const client = createApolloClient()
-    const LoginMutation = gql`
-      mutation signin($username: String!, $password: String!) {
-        login(username: $username, password: $password) {
-          token
-        }
-      }
-    `
-
-    const result = await client.mutate({
-      mutation: LoginMutation,
-      variables: { username, password },
-    })
-
-    console.log(result)
-
-    if (result?.data?.login?.token) {
-      setAuthToken(result.data.login.token)
-    }
-  }
-
-  const signOut = () => {
-    setAuthToken(null)
-  }
-
-  return {
-    setAuthToken,
-    isSignedIn,
-    signIn,
-    signOut,
-    createApolloClient,
-  }
-}
+export { AuthContext, AuthProvider };
